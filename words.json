@@ -1,0 +1,38 @@
+[
+    {
+        "id": 1,
+        "word": "improve",
+        "meaning": "～を向上させる",
+        "phonetic": "imprúːv",
+        "example": "Nothing will improve by waiting.",
+        "example_translation": "待っていても事態は好転しない。",
+        "unit": 1
+    },
+    {
+        "id": 2,
+        "word": "relate",
+        "meaning": "～を（...と）関連づける",
+        "phonetic": "riléit",
+        "example": "I cannot relate to his ideas.",
+        "example_translation": "彼の考えには共感できない。",
+        "unit": 1
+    },
+    {
+        "id": 3,
+        "word": "provide",
+        "meaning": "～を供給する",
+        "phonetic": "prəváid",
+        "example": "The hotel provides a shoe-cleaning service.",
+        "example_translation": "そのホテルは靴磨きのサービスを提供している。",
+        "unit": 2
+    },
+    {
+        "id": 4,
+        "word": "consider",
+        "meaning": "～をみなす、～をよく考える",
+        "phonetic": "kənsídər",
+        "example": "He is considered an expert.",
+        "example_translation": "彼は専門家とみなされている。",
+        "unit": 2
+    }
+]

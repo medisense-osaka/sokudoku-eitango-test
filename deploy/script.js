@@ -7,22 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const exampleDisplay = document.getElementById('example-display');
     const exampleTranslationDisplay = document.getElementById('example-translation-display');
 
-    const startScreen = document.getElementById('start-screen');
-    const quizScreen = document.getElementById('quiz-screen');
-
-    const startUnitSelect = document.getElementById('start-unit');
-    const endUnitSelect = document.getElementById('end-unit');
-    const startBtn = document.getElementById('start-btn');
-
-    const currentUnitDisplay = document.getElementById('current-unit-display');
-
     const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
 
     const resetBtn = document.getElementById('reset-btn');
+    const unitSelect = document.getElementById('unit-select');
 
     const progressBar = document.getElementById('progress-bar');
-    const timerBar = document.getElementById('timer-bar');
     const currentCountDisplay = document.getElementById('current-count');
     const totalCountDisplay = document.getElementById('total-count');
 
@@ -31,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSessionWords = [];
     let currentIndex = 0;
     let isAnswered = false;
-    let timerInterval;
-    const TIME_LIMIT = 5000; // 5 seconds
 
     const feedbackCorrect = document.getElementById('feedback-correct');
     const feedbackWrong = document.getElementById('feedback-wrong');
@@ -41,67 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadWords() {
         if (typeof vocabularyData !== 'undefined') {
             allWords = vocabularyData;
-            populateUnitSelectors();
+            populateUnitSelect();
+            startSession();
         } else {
-            alert("Error: Data not found.");
+            wordDisplay.textContent = "Error: Data not found.";
         }
     }
 
-    function populateUnitSelectors() {
+    function populateUnitSelect() {
         // Ensure unit is treated as a number
         const units = [...new Set(allWords.map(w => parseInt(w.unit)))].sort((a, b) => a - b);
-
-        startUnitSelect.innerHTML = '';
-        endUnitSelect.innerHTML = '';
-
+        unitSelect.innerHTML = '<option value="all">全ユニット</option>';
         units.forEach(unit => {
-            const optionStart = document.createElement('option');
-            optionStart.value = unit;
-            optionStart.textContent = `Unit ${unit}`;
-            startUnitSelect.appendChild(optionStart);
-
-            const optionEnd = document.createElement('option');
-            optionEnd.value = unit;
-            optionEnd.textContent = `Unit ${unit}`;
-            endUnitSelect.appendChild(optionEnd);
+            const option = document.createElement('option');
+            option.value = unit;
+            option.textContent = `Unit ${unit}`;
+            unitSelect.appendChild(option);
         });
-
-        // Set default values (Start: Min, End: Max)
-        if (units.length > 0) {
-            startUnitSelect.value = units[0];
-            endUnitSelect.value = units[units.length - 1];
-        }
     }
 
     function startSession() {
-        const start = parseInt(startUnitSelect.value);
-        const end = parseInt(endUnitSelect.value);
-
-        if (start > end) {
-            alert("開始ユニットは終了ユニットより前である必要があります。");
-            return;
-        }
-
-        currentSessionWords = allWords.filter(w => {
-            const u = parseInt(w.unit);
-            return u >= start && u <= end;
-        });
-
-        if (currentSessionWords.length === 0) {
-            alert("該当する単語がありません。");
-            return;
-        }
-
-        // Show Quiz Screen
-        startScreen.style.display = 'none';
-        startScreen.classList.remove('active');
-        quizScreen.style.display = 'flex';
-
-        // Update Title
-        if (start === end) {
-            currentUnitDisplay.textContent = start;
+        const selectedUnit = unitSelect.value;
+        if (selectedUnit === 'all') {
+            currentSessionWords = [...allWords];
         } else {
-            currentUnitDisplay.textContent = `${start} - ${end}`;
+            currentSessionWords = allWords.filter(w => w.unit == selectedUnit);
         }
 
         // Simple Shuffle
@@ -110,13 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = 0;
         updateStats();
         showCard();
-    }
-
-    function resetApp() {
-        quizScreen.style.display = 'none';
-        startScreen.style.display = 'flex';
-        startScreen.classList.add('active');
-        populateUnitSelectors(); // Refresh if needed, or just keep selection
     }
 
     function updateStats() {
@@ -210,13 +156,11 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
             <div class="card-front">
                 <h2>Complete!</h2>
-                <p>範囲学習が完了しました！</p>
-                <p>正解数などはまだ記録していませんが、お疲れ様でした。</p>
+                <p>すべての単語を学習しました。</p>
             </div>
         `;
         optionsContainer.innerHTML = '';
         nextBtn.style.display = 'none';
-        // Reset button in footer will allow going back
     }
 
     // Event Listeners
@@ -238,10 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showCard();
     });
 
-    startBtn.addEventListener('click', startSession);
-    resetBtn.addEventListener('click', resetApp);
+
+    unitSelect.addEventListener('change', startSession);
+    resetBtn.addEventListener('click', startSession);
 
     // Initialize
     loadWords();
 });
-
