@@ -15,50 +15,72 @@
 
 <body>
     <div class="app-container">
-        <header>
-            <h1>Sokan Core</h1>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar"></div>
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <header>
+                <h1>Sokan Core</h1>
+                <p>範囲を選択してスタート</p>
+            </header>
+            <div class="settings-container">
+                <div class="setting-group">
+                    <label>開始ユニット</label>
+                    <select id="start-unit"></select>
+                </div>
+                <div class="setting-group">
+                    <label>終了ユニット</label>
+                    <select id="end-unit"></select>
+                </div>
+                <button id="start-btn" class="btn primary">テスト開始</button>
             </div>
-            <div class="stats">
-                <span id="current-count">0</span> / <span id="total-count">0</span>
-            </div>
-        </header>
+        </div>
 
-        <main>
-            <div class="card-container" id="card-container">
-                <!-- Card content will be injected here -->
-                <div class="card" id="card">
-                    <div class="card-front">
-                        <div class="feedback-overlay" id="feedback-correct">⭕</div>
-                        <div class="feedback-overlay" id="feedback-wrong">❌</div>
-                        <h2 id="word-display">Loading...</h2>
-                        <p class="phonetic" id="phonetic-display"></p>
-                    </div>
-                    <div class="card-back">
-                        <h3 id="meaning-display"></h3>
-                        <p class="example" id="example-display"></p>
-                        <p class="example-translation" id="example-translation-display"></p>
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen" style="display: none;">
+            <header>
+                <h1>Unit <span id="current-unit-display"></span></h1>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+                <!-- Timer Bar -->
+                <div class="timer-container">
+                    <div class="timer-bar" id="timer-bar"></div>
+                </div>
+                <div class="stats">
+                    <span id="current-count">0</span> / <span id="total-count">0</span>
+                </div>
+            </header>
+
+            <main>
+                <div class="card-container" id="card-container">
+                    <!-- Card content will be injected here -->
+                    <div class="card" id="card">
+                        <div class="card-front">
+                            <div class="feedback-overlay" id="feedback-correct">⭕</div>
+                            <div class="feedback-overlay" id="feedback-wrong">❌</div>
+                            <h2 id="word-display">Loading...</h2>
+                            <p class="phonetic" id="phonetic-display"></p>
+                        </div>
+                        <div class="card-back">
+                            <h3 id="meaning-display"></h3>
+                            <p class="example" id="example-display"></p>
+                            <p class="example-translation" id="example-translation-display"></p>
+                        </div>
                     </div>
                 </div>
+            </main>
+
+            <div class="options-container" id="options-container">
+                <!-- Options will be generated here -->
             </div>
-        </main>
 
-        <div class="options-container" id="options-container">
-            <!-- Options will be generated here -->
-        </div>
+            <div class="controls">
+                <button id="next-btn" class="btn primary" style="display: none;">次へ</button>
+            </div>
 
-        <div class="controls">
-            <button id="next-btn" class="btn primary" style="display: none;">次へ</button>
-        </div>
-
-        <footer>
-            <select id="unit-select">
-                <option value="all">全ユニット</option>
-                <!-- Options will be populated -->
-            </select>
-            <button id="reset-btn" class="btn secondary">リセット</button>
-        </footer>
+            <footer>
+                <button id="reset-btn" class="btn secondary">終了する</button>
+            </footer>
+        </div> <!-- End Quiz Screen -->
     </div>
     <script src="data.js"></script>
     <script src="script.js"></script>

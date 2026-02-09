@@ -7,13 +7,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const exampleDisplay = document.getElementById('example-display');
     const exampleTranslationDisplay = document.getElementById('example-translation-display');
 
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+
+    const startUnitSelect = document.getElementById('start-unit');
+    const endUnitSelect = document.getElementById('end-unit');
+    const startBtn = document.getElementById('start-btn');
+
+    const currentUnitDisplay = document.getElementById('current-unit-display');
+
     const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
 
     const resetBtn = document.getElementById('reset-btn');
-    const unitSelect = document.getElementById('unit-select');
 
     const progressBar = document.getElementById('progress-bar');
+    const timerBar = document.getElementById('timer-bar');
     const currentCountDisplay = document.getElementById('current-count');
     const totalCountDisplay = document.getElementById('total-count');
 
@@ -22,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSessionWords = [];
     let currentIndex = 0;
     let isAnswered = false;
+    let timerInterval;
+    const TIME_LIMIT = 5000; // 5 seconds
 
     const feedbackCorrect = document.getElementById('feedback-correct');
     const feedbackWrong = document.getElementById('feedback-wrong');
@@ -30,31 +41,67 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadWords() {
         if (typeof vocabularyData !== 'undefined') {
             allWords = vocabularyData;
-            populateUnitSelect();
-            startSession();
+            populateUnitSelectors();
         } else {
-            wordDisplay.textContent = "Error: Data not found.";
+            alert("Error: Data not found.");
         }
     }
 
-    function populateUnitSelect() {
+    function populateUnitSelectors() {
         // Ensure unit is treated as a number
         const units = [...new Set(allWords.map(w => parseInt(w.unit)))].sort((a, b) => a - b);
-        unitSelect.innerHTML = '<option value="all">全ユニット</option>';
+
+        startUnitSelect.innerHTML = '';
+        endUnitSelect.innerHTML = '';
+
         units.forEach(unit => {
-            const option = document.createElement('option');
-            option.value = unit;
-            option.textContent = `Unit ${unit}`;
-            unitSelect.appendChild(option);
+            const optionStart = document.createElement('option');
+            optionStart.value = unit;
+            optionStart.textContent = `Unit ${unit}`;
+            startUnitSelect.appendChild(optionStart);
+
+            const optionEnd = document.createElement('option');
+            optionEnd.value = unit;
+            optionEnd.textContent = `Unit ${unit}`;
+            endUnitSelect.appendChild(optionEnd);
         });
+
+        // Set default values (Start: Min, End: Max)
+        if (units.length > 0) {
+            startUnitSelect.value = units[0];
+            endUnitSelect.value = units[units.length - 1];
+        }
     }
 
     function startSession() {
-        const selectedUnit = unitSelect.value;
-        if (selectedUnit === 'all') {
-            currentSessionWords = [...allWords];
+        const start = parseInt(startUnitSelect.value);
+        const end = parseInt(endUnitSelect.value);
+
+        if (start > end) {
+            alert("開始ユニットは終了ユニットより前である必要があります。");
+            return;
+        }
+
+        currentSessionWords = allWords.filter(w => {
+            const u = parseInt(w.unit);
+            return u >= start && u <= end;
+        });
+
+        if (currentSessionWords.length === 0) {
+            alert("該当する単語がありません。");
+            return;
+        }
+
+        // Show Quiz Screen
+        startScreen.style.display = 'none';
+        startScreen.classList.remove('active');
+        quizScreen.style.display = 'flex';
+
+        // Update Title
+        if (start === end) {
+            currentUnitDisplay.textContent = start;
         } else {
-            currentSessionWords = allWords.filter(w => w.unit == selectedUnit);
+            currentUnitDisplay.textContent = `${start} - ${end}`;
         }
 
         // Simple Shuffle
@@ -63,6 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = 0;
         updateStats();
         showCard();
+    }
+
+    function resetApp() {
+        clearTimeout(timerInterval); // Stop timer
+        quizScreen.style.display = 'none';
+        startScreen.style.display = 'flex';
+        startScreen.classList.add('active');
+        populateUnitSelectors(); // Refresh if needed, or just keep selection
     }
 
     function updateStats() {
@@ -79,88 +134,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const wordData = currentSessionWords[currentIndex];
-
-        // Reset Card State
         isAnswered = false;
-        card.classList.remove('flipped');
-        feedbackCorrect.classList.remove('show');
-        feedbackWrong.classList.remove('show');
         nextBtn.style.display = 'none';
+        card.classList.remove('flipped'); // Ensure front is shown
 
-        // Update Content
-        wordDisplay.textContent = wordData.word;
-        phoneticDisplay.textContent = wordData.phonetic ? `[${wordData.phonetic}]` : '';
-        meaningDisplay.textContent = wordData.meaning;
-        exampleDisplay.textContent = wordData.example || '';
-        exampleTranslationDisplay.textContent = wordData.example_translation || '';
+        // Remove previous feedback
+        if (card.querySelector('.feedback-overlay')) {
+            card.querySelector('.feedback-overlay').remove();
+        }
 
+        // Generate Options
         generateOptions(wordData);
-        updateStats();
+
+        card.innerHTML = `
+            <div class="card-front">
+                <div class="word">${wordData.word}</div>
+                <div class="phonetic">${wordData.phonetic || ''}</div>
+            </div>
+            <div class="card-back">
+                <div class="meaning">${wordData.meaning}</div>
+                <div class="example">${wordData.example || ''}</div>
+                <div class="example-translation">${wordData.example_translation || ''}</div>
+            </div>
+        `;
+
+        updateStats(); // Update progress bar
+        startTimer();  // Start the countdown
     }
 
-    function generateOptions(correctWord) {
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerBar.style.transition = 'none';
+        timerBar.style.width = '100%';
+        timerBar.style.backgroundColor = '#ff9800'; // Reset color
+
+        // Force reflow
+        void timerBar.offsetWidth;
+
+        timerBar.style.transition = `width ${TIME_LIMIT}ms linear`;
+        timerBar.style.width = '0%';
+
+        timerInterval = setTimeout(() => {
+            handleTimeout();
+        }, TIME_LIMIT);
+    }
+
+    function stopTimer() {
+        clearTimeout(timerInterval);
+        const computedStyle = window.getComputedStyle(timerBar);
+        const currentWidth = computedStyle.width;
+        timerBar.style.transition = 'none';
+        timerBar.style.width = currentWidth; // Freeze bar
+    }
+
+    function handleTimeout() {
+        if (isAnswered) return;
+
+        // Treat as wrong answer
+        checkAnswer(null, currentSessionWords[currentIndex]); // Pass null as selected option
+    }
+
+    function generateOptions(currentWord) {
         optionsContainer.innerHTML = '';
 
-        // Pick 3 distractors
-        const otherWords = allWords.filter(w => w.id !== correctWord.id);
-        const shuffledOthers = otherWords.sort(() => Math.random() - 0.5);
-        const distractors = shuffledOthers.slice(0, 3);
+        // 1. Get Distractors (3 random words from other units/same unit)
+        // Filter out current word
+        const otherWords = allWords.filter(w => w.id !== currentWord.id);
+        // Shuffle and pick 3
+        const distractors = otherWords.sort(() => Math.random() - 0.5).slice(0, 3);
 
-        const options = [...distractors, correctWord];
-        options.sort(() => Math.random() - 0.5);
+        // 2. Combine and Shuffle
+        const options = [...distractors, currentWord].sort(() => Math.random() - 0.5);
 
+        // 3. Render
         options.forEach(option => {
             const btn = document.createElement('button');
-            btn.classList.add('option-btn');
+            btn.className = 'option-btn';
             btn.textContent = option.meaning;
-            btn.onclick = () => checkAnswer(option, correctWord, btn);
+            btn.onclick = () => checkAnswer(option, currentWord, btn);
             optionsContainer.appendChild(btn);
         });
     }
 
-    function checkAnswer(selectedOption, correctWord, btnElement) {
+    function checkAnswer(selectedOption, currentWord, btnElement = null) {
         if (isAnswered) return;
         isAnswered = true;
+        stopTimer();
 
-        const isCorrect = selectedOption.id === correctWord.id;
+        const isCorrect = selectedOption && selectedOption.id === currentWord.id;
 
-        if (isCorrect) {
-            btnElement.classList.add('correct');
-            feedbackCorrect.classList.add('show');
-        } else {
-            btnElement.classList.add('wrong');
-            feedbackWrong.classList.add('show');
-            // Highlight the correct one
-            const buttons = optionsContainer.querySelectorAll('.option-btn');
-            buttons.forEach(b => {
-                if (b.textContent === correctWord.meaning) {
-                    b.classList.add('correct');
-                }
-            });
-        }
+        // Visual Feedback for Options
+        const allBtns = optionsContainer.querySelectorAll('.option-btn');
+        allBtns.forEach(btn => {
+            if (btn.textContent === currentWord.meaning) {
+                btn.classList.add('correct'); // Always highlight correct answer
+            }
+            if (!isCorrect && btn === btnElement) {
+                btn.classList.add('wrong'); // Highlight selected wrong answer
+            }
+            btn.disabled = true; // Disable all buttons after answer
+        });
 
-        // Delay flip to show feedback first
+        // Card Overlay Feedback
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `feedback-overlay ${isCorrect ? 'correct' : 'wrong'}`;
+        feedbackDiv.innerText = isCorrect ? '⭕' : '❌';
+        if (!selectedOption) feedbackDiv.innerText = 'TIME UP'; // Special text for timeout
+        card.appendChild(feedbackDiv);
+
+        // Show Next Button
+        nextBtn.style.display = 'block';
+
+        // Flip card after short delay to show details
         setTimeout(() => {
             card.classList.add('flipped');
         }, 800);
-
-        // Show Next Button
-        nextBtn.style.display = 'inline-block';
-
-        // Disable all buttons
-        const buttons = optionsContainer.querySelectorAll('.option-btn');
-        buttons.forEach(b => b.disabled = true);
     }
 
     function finishSession() {
         card.innerHTML = `
             <div class="card-front">
                 <h2>Complete!</h2>
-                <p>すべての単語を学習しました。</p>
+                <p>範囲学習が完了しました！</p>
+                <p>正解数などはまだ記録していませんが、お疲れ様でした。</p>
             </div>
         `;
         optionsContainer.innerHTML = '';
         nextBtn.style.display = 'none';
+        // Reset button in footer will allow going back
     }
 
     // Event Listeners
@@ -182,10 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showCard();
     });
 
-
-    unitSelect.addEventListener('change', startSession);
-    resetBtn.addEventListener('click', startSession);
+    startBtn.addEventListener('click', startSession);
+    resetBtn.addEventListener('click', resetApp);
 
     // Initialize
     loadWords();
 });
+
