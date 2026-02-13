@@ -1,0 +1,10 @@
+# Google Drive files
+*.pdf
+*.gsheet
+
+# Setup guide (contains no secrets, but not needed for deploy)
+gas_setup.md
+
+# Python
+__pycache__/
+*.pyc

@@ -18,10 +18,14 @@
         <!-- Start Screen -->
         <div id="start-screen" class="screen active">
             <header>
-                <h1>Sokan Core</h1>
+                <h1>単語テスト</h1>
                 <p>範囲を選択してスタート</p>
             </header>
             <div class="settings-container">
+                <div class="setting-group">
+                    <label>名前</label>
+                    <input type="text" id="student-name" placeholder="名前を入力" autocomplete="name">
+                </div>
                 <div class="setting-group">
                     <label>開始ユニット</label>
                     <select id="start-unit"></select>
@@ -52,11 +56,10 @@
 
             <main>
                 <div class="card-container" id="card-container">
+                    <div class="result-feedback" id="result-feedback"></div>
                     <!-- Card content will be injected here -->
                     <div class="card" id="card">
                         <div class="card-front">
-                            <div class="feedback-overlay" id="feedback-correct">⭕</div>
-                            <div class="feedback-overlay" id="feedback-wrong">❌</div>
                             <h2 id="word-display">Loading...</h2>
                             <p class="phonetic" id="phonetic-display"></p>
                         </div>
