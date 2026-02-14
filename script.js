@@ -219,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Send results with aborted flag
         sendResults(percentage, answeredCount, true);
+        currentSessionWords = [];
 
         // Event listeners for result buttons
         document.getElementById('retry-btn').addEventListener('click', () => {
