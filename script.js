@@ -482,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Send results to Google Sheets
         sendResults(percentage, total, false);
+        currentSessionWords = [];
 
         // Event listeners for result buttons
         document.getElementById('retry-btn').addEventListener('click', () => {
