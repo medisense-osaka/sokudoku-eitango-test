@@ -525,6 +525,12 @@ select {
     font-size: 1.2rem;
     font-weight: 600;
     color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.result-detail {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
     margin-bottom: 16px;
 }
 

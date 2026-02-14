@@ -143,11 +143,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function resetApp() {
-        clearTimeout(timerInterval); // Stop timer
+        // テスト進行中の場合は中止扱い
+        if (currentSessionWords.length > 0) {
+            if (!confirm('テストを中止しますか？\n現在の結果が送信されます。')) {
+                return;
+            }
+            // 中止結果を表示・送信
+            abortSession();
+            return;
+        }
+
+        clearTimeout(timerInterval);
         quizScreen.style.display = 'none';
         startScreen.style.display = 'flex';
         startScreen.classList.add('active');
-        populateUnitSelectors(); // Refresh if needed, or just keep selection
+        populateUnitSelectors();
+    }
+
+    function abortSession() {
+        clearTimeout(timerInterval);
+        if (flipTimeoutId) {
+            clearTimeout(flipTimeoutId);
+            flipTimeoutId = null;
+        }
+        resultFeedback.className = 'result-feedback';
+        resultFeedback.textContent = '';
+
+        const answeredCount = currentIndex + (isAnswered ? 1 : 0);
+        const total = currentSessionWords.length;
+        const percentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
+        // Build wrong words list HTML
+        let wrongListHTML = '';
+        if (wrongWords.length > 0) {
+            wrongListHTML = `
+                <div class="wrong-words-section">
+                    <h3>間違えた単語</h3>
+                    <ul class="wrong-words-list">
+                        ${wrongWords.map(w => `<li><strong>${w.word}</strong> — ${w.meaning}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Hide quiz elements, show result
+        optionsContainer.innerHTML = '';
+        nextBtn.style.display = 'none';
+        card.style.display = 'none';
+
+        const resultHTML = `
+            <div class="result-screen">
+                <div class="result-emoji">⏹️</div>
+                <div class="result-grade">テスト中止</div>
+                <div class="result-score">
+                    <span class="score-number">${correctCount}</span>
+                    <span class="score-separator"> / </span>
+                    <span class="score-total">${answeredCount}</span>
+                </div>
+                <div class="result-percentage">${percentage}%</div>
+                <div class="result-detail">${answeredCount} / ${total} 問回答</div>
+                <div class="submit-status" id="submit-status"></div>
+                ${wrongListHTML}
+                <div class="result-actions">
+                    <button class="btn primary" id="retry-btn">もう一度</button>
+                    <button class="btn secondary" id="back-btn">戻る</button>
+                </div>
+            </div>
+        `;
+
+        const mainEl = quizScreen.querySelector('main');
+        const resultContainer = document.createElement('div');
+        resultContainer.id = 'result-container';
+        resultContainer.innerHTML = resultHTML;
+        mainEl.appendChild(resultContainer);
+
+        // Send results with aborted flag
+        sendResults(percentage, answeredCount, true);
+
+        // Event listeners for result buttons
+        document.getElementById('retry-btn').addEventListener('click', () => {
+            mainEl.removeChild(resultContainer);
+            card.style.display = '';
+            startSession();
+        });
+        document.getElementById('back-btn').addEventListener('click', () => {
+            mainEl.removeChild(resultContainer);
+            card.style.display = '';
+            clearTimeout(timerInterval);
+            currentSessionWords = [];
+            quizScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            startScreen.classList.add('active');
+            populateUnitSelectors();
+        });
     }
 
     function updateStats() {
@@ -166,7 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const wordData = currentSessionWords[currentIndex];
         isAnswered = false;
         nextBtn.style.display = 'none';
-        card.classList.remove('flipped'); // Ensure front is shown
+
+        // アニメーションなしで即座にアンフリップ（新しい問題の裏面が見えるのを防ぐ）
+        card.style.transition = 'none';
+        card.classList.remove('flipped');
+        void card.offsetWidth; // 強制リフロー
 
         // Clear any pending flip timer from previous question
         if (flipTimeoutId) {
@@ -193,6 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         card.style.borderLeft = 'none';
+
+        // トランジションを復活させる
+        card.style.transition = '';
 
         updateStats(); // Update progress bar
         startTimer();  // Start the countdown
@@ -304,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
         flipTimeoutId = setTimeout(() => {
             // Hide feedback before flipping so answer is visible
             resultFeedback.classList.remove('show');
-            setTimeout(() => {
+            flipTimeoutId = setTimeout(() => {
                 card.classList.add('flipped');
             }, 300);
         }, 1000);
@@ -385,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mainEl.appendChild(resultContainer);
 
         // Send results to Google Sheets
-        sendResults(percentage, total);
+        sendResults(percentage, total, false);
 
         // Event listeners for result buttons
         document.getElementById('retry-btn').addEventListener('click', () => {
@@ -401,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Send results to Google Sheets via GAS
-    function sendResults(percentage, total) {
+    function sendResults(percentage, total, aborted = false) {
         const statusEl = document.getElementById('submit-status');
         if (!GAS_URL) {
             statusEl.textContent = '';
@@ -419,7 +514,8 @@ document.addEventListener('DOMContentLoaded', () => {
             correctCount: correctCount,
             totalCount: total,
             percentage: percentage,
-            wrongWords: wrongWordsList
+            wrongWords: wrongWordsList,
+            status: aborted ? '中止' : '完了'
         };
 
         fetch(GAS_URL, {
