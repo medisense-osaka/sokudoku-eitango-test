@@ -65,26 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startUnitSelect.innerHTML = '';
         endUnitSelect.innerHTML = '';
 
-        // 100問ごとに区切った選択肢を作成（例: 1, 101, 201... またはキリよく100区切りなど。ここでは元の単語数に応じた区切りにする）
-        // ユーザーが細かく指定できるように、50刻みにする案もありますが、
-        // 今回は全てのIDを選択肢に入れると多すぎるため、50問ごとの区切りと、最後のIDを追加します。
-
-        const step = 50;
-        const options = [];
-        for (let i = 1; i <= wordIds[wordIds.length - 1]; i += step) {
-            options.push(i);
-        }
-        // 最後の番号がぴったりでなければ追加
-        if (options[options.length - 1] !== wordIds[wordIds.length - 1]) {
-            // 区切り用なので末尾は厳密には入れなくても開始・終了で選べます。
-            // ユーザーが「終了番号」として選べるよう、末尾の数字も含める方が親切です。
-            options.push(wordIds[wordIds.length - 1]);
-        }
-
-        // 重複排除してソート
-        const uniqueOptions = [...new Set(options)].sort((a, b) => a - b);
-
-        uniqueOptions.forEach(idVal => {
+        wordIds.forEach(idVal => {
             const optionStart = document.createElement('option');
             optionStart.value = idVal;
             optionStart.textContent = `No. ${idVal}`;
@@ -92,18 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const optionEnd = document.createElement('option');
             optionEnd.value = idVal;
-            // 終了番号の選択肢としては、開始番号の区切りとしての意味を持たせるか、
-            // 「〜番まで」という意味で、直前のキリの良い数字の終わり (例: 50, 100) を出すのがよい。
-            // ここではシンプルに同じリストを使います。（あるいはユーザーが任意で入力できるフォームにする手もあります）
-            // UIを大きく変えないようにするため、同じ option を追加します。
             optionEnd.textContent = `No. ${idVal}`;
             endUnitSelect.appendChild(optionEnd);
         });
 
         // Set default values (Start: Min, End: Max)
-        if (uniqueOptions.length > 0) {
-            startUnitSelect.value = uniqueOptions[0];
-            endUnitSelect.value = uniqueOptions[uniqueOptions.length - 1];
+        if (wordIds.length > 0) {
+            startUnitSelect.value = wordIds[0];
+            endUnitSelect.value = wordIds[wordIds.length - 1];
         }
     }
 
