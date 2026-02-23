@@ -132,8 +132,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUnitDisplay.textContent = `${start} - ${end}`;
         }
 
-        // Simple Shuffle
-        currentSessionWords.sort(() => Math.random() - 0.5);
+        // 選択された範囲全体から均等にランダム抽出するため、Fisher-Yatesシャッフルを使用する
+        for (let i = currentSessionWords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [currentSessionWords[i], currentSessionWords[j]] = [currentSessionWords[j], currentSessionWords[i]];
+        }
+
+        // 問題数を最大50問に制限
+        currentSessionWords = currentSessionWords.slice(0, 50);
 
         currentIndex = 0;
         correctCount = 0;
@@ -332,11 +338,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Get Distractors (3 random words from other units/same unit)
         // Filter out current word
         const otherWords = allWords.filter(w => w.id !== currentWord.id);
-        // Shuffle and pick 3
-        const distractors = otherWords.sort(() => Math.random() - 0.5).slice(0, 3);
+
+        // Fisher-Yates shuffle for distractors
+        for (let i = otherWords.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [otherWords[i], otherWords[j]] = [otherWords[j], otherWords[i]];
+        }
+        const distractors = otherWords.slice(0, 3);
 
         // 2. Combine and Shuffle
-        const options = [...distractors, currentWord].sort(() => Math.random() - 0.5);
+        const options = [...distractors, currentWord];
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
 
         // 3. Render
         options.forEach(option => {
