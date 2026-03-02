@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startSession() {
         const name = studentNameInput.value.trim();
         if (!name) {
-            alert('名前を入力してください。');
+            alert('名前を選択してください。');
             studentNameInput.focus();
             return;
         }

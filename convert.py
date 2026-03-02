@@ -6,16 +6,25 @@ data_list = []
 
 with open(csv_path, 'r', encoding='utf-8') as f:
     reader = csv.reader(f)
-    for row in reader:
+    for i, row in enumerate(reader):
+        # Skip header
+        if i == 0:
+            continue
+            
         # Check if line is valid (at least 5 columns)
         if len(row) < 5:
             continue
             
         # Parse columns
         try:
-            unit = row[1].strip()
+            # D列(3)が単語、E列(4)が意味
             word = row[3].strip()
             meaning = row[4].strip()
+            
+            # C列(2)がUnit番号。ただし空の場合や存在しない場合はデフォルトを入れる
+            unit_val = row[2].strip() if len(row) > 2 else ""
+            unit = unit_val if unit_val else "1"
+            
         except IndexError:
             continue
         
