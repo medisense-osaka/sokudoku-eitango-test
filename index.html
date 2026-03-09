@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>速読英単語 テスト</title>
+    <title>英語テスト</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,16 +18,24 @@
         <!-- Start Screen -->
         <div id="start-screen" class="screen active">
             <header>
-                <h1>単語テスト</h1>
-                <p>範囲を選択してスタート</p>
+                <h1 id="start-title">英語テスト</h1>
+                <p>モードと範囲を選択してスタート</p>
             </header>
             <div class="settings-container">
+                <div class="setting-group">
+                    <label>テスト種別</label>
+                    <div class="mode-toggle" id="mode-toggle">
+                        <button class="mode-btn active" data-mode="vocabulary">📖 単語テスト</button>
+                        <button class="mode-btn" data-mode="idiom">📝 熟語テスト</button>
+                    </div>
+                </div>
                 <div class="setting-group">
                     <label>名前</label>
                     <select id="student-name">
                         <option value="" disabled selected>名前を選択してください</option>
                         <option value="今出　隆之典">今出　隆之典</option>
                         <option value="原口　陽菜">原口　陽菜</option>
+                        <option value="テスト">テスト</option>
                     </select>
                 </div>
                 <div class="setting-group">
@@ -90,6 +98,7 @@
         </div> <!-- End Quiz Screen -->
     </div>
     <script src="data.js"></script>
+    <script src="idiom_data.js"></script>
     <script src="script.js"></script>
 </body>
 

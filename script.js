@@ -29,7 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentCountDisplay = document.getElementById('current-count');
     const totalCountDisplay = document.getElementById('total-count');
 
+    // Mode toggle elements
+    const modeToggle = document.getElementById('mode-toggle');
+    const modeBtns = modeToggle.querySelectorAll('.mode-btn');
+    const startTitle = document.getElementById('start-title');
+
     // State
+    let testMode = 'vocabulary'; // 'vocabulary' or 'idiom'
     let allWords = [];
     let currentSessionWords = [];
     let currentIndex = 0;
@@ -48,14 +54,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedbackWrong = document.getElementById('feedback-wrong');
     const resultFeedback = document.getElementById('result-feedback');
 
+    // Mode Toggle Event
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modeBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            testMode = btn.dataset.mode;
+            loadWords();
+        });
+    });
+
     // Load Data
     function loadWords() {
-        if (typeof vocabularyData !== 'undefined') {
-            allWords = vocabularyData;
-            populateUnitSelectors();
+        if (testMode === 'idiom') {
+            if (typeof idiomData !== 'undefined') {
+                allWords = idiomData;
+                startTitle.textContent = '熟語テスト';
+            } else {
+                alert("Error: 熟語データが見つかりません。");
+                return;
+            }
         } else {
-            alert("Error: Data not found.");
+            if (typeof vocabularyData !== 'undefined') {
+                allWords = vocabularyData;
+                startTitle.textContent = '単語テスト';
+            } else {
+                alert("Error: 単語データが見つかりません。");
+                return;
+            }
         }
+        populateUnitSelectors();
     }
 
     function populateUnitSelectors() {
@@ -109,7 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (currentSessionWords.length === 0) {
-            alert("該当する単語がありません。");
+            const label = testMode === 'idiom' ? '熟語' : '単語';
+            alert(`該当する${label}がありません。`);
             return;
         }
 
@@ -151,10 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetApp() {
         // テスト進行中の場合は中止扱い
         if (currentSessionWords.length > 0) {
-            if (!confirm('テストを中止しますか？\n現在の結果が送信されます。')) {
-                return;
-            }
-            // 中止結果を表示・送信
             abortSession();
             return;
         }
@@ -178,13 +203,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const answeredCount = currentIndex + (isAnswered ? 1 : 0);
         const total = currentSessionWords.length;
         const percentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+        const itemLabel = testMode === 'idiom' ? '熟語' : '単語';
 
         // Build wrong words list HTML
         let wrongListHTML = '';
         if (wrongWords.length > 0) {
             wrongListHTML = `
                 <div class="wrong-words-section">
-                    <h3>間違えた単語</h3>
+                    <h3>間違えた${itemLabel}</h3>
                     <ul class="wrong-words-list">
                         ${wrongWords.map(w => `<li><strong>${w.word}</strong> — ${w.meaning}</li>`).join('')}
                     </ul>
@@ -433,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = currentSessionWords.length;
         const wrongCount = wrongWords.length;
         const percentage = Math.round((correctCount / total) * 100);
+        const itemLabel = testMode === 'idiom' ? '熟語' : '単語';
 
         // Determine grade emoji and message
         let gradeEmoji, gradeMsg;
@@ -455,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (wrongWords.length > 0) {
             wrongListHTML = `
                 <div class="wrong-words-section">
-                    <h3>間違えた単語</h3>
+                    <h3>間違えた${itemLabel}</h3>
                     <ul class="wrong-words-list">
                         ${wrongWords.map(w => `<li><strong>${w.word}</strong> — ${w.meaning}</li>`).join('')}
                     </ul>
@@ -532,7 +559,8 @@ document.addEventListener('DOMContentLoaded', () => {
             totalCount: total,
             percentage: percentage,
             wrongWords: wrongWordsList,
-            status: aborted ? '中止' : '完了'
+            status: aborted ? '中止' : '完了',
+            testType: testMode === 'idiom' ? '熟語' : '単語'
         };
 
         fetch(GAS_URL, {
@@ -575,4 +603,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize
     loadWords();
 });
-
