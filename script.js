@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnswered = false;
     let timerInterval;
     let flipTimeoutId = null;
-    const TIME_LIMIT = 3000; // 3 seconds
+    const TIME_LIMIT = 5000; // 5 seconds
 
     // Score tracking
     let correctCount = 0;
