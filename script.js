@@ -16,10 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const endUnitSelect = document.getElementById('end-unit');
     const startBtn = document.getElementById('start-btn');
     const studentNameInput = document.getElementById('student-name');
-
     const currentUnitDisplay = document.getElementById('current-unit-display');
 
-    const optionsContainer = document.getElementById('options-container');
+    // New selection elements
+    const vocabRangeGroup = document.getElementById('vocab-range-group');
+    const vocabUnitRangeSelect = document.getElementById('vocab-unit-range');
+    const startUnitGroup = document.getElementById('start-unit-group');
+    const endUnitGroup = document.getElementById('end-unit-group');    const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
 
     const resetBtn = document.getElementById('reset-btn');
@@ -60,6 +63,18 @@ document.addEventListener('DOMContentLoaded', () => {
             modeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             testMode = btn.dataset.mode;
+            
+            // Toggle Display
+            if (testMode === 'vocabulary') {
+                vocabRangeGroup.style.display = '';
+                startUnitGroup.style.display = 'none';
+                endUnitGroup.style.display = 'none';
+            } else {
+                vocabRangeGroup.style.display = 'none';
+                startUnitGroup.style.display = '';
+                endUnitGroup.style.display = '';
+            }
+            
             loadWords();
         });
     });
@@ -121,20 +136,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         studentName = name;
 
-        const start = parseInt(startUnitSelect.value);
-        const end = parseInt(endUnitSelect.value);
+        let start, end;
 
-        if (start > end) {
-            alert("開始番号は終了番号より前である必要があります。");
-            return;
+        if (testMode === 'vocabulary') {
+            const rangeStr = vocabUnitRangeSelect.value;
+            const parts = rangeStr.split('-');
+            start = parseInt(parts[0]);
+            end = parseInt(parts[1]);
+
+            sessionUnitRange = `Unit ${start}-${end}`;
+
+            currentSessionWords = allWords.filter(w => {
+                const unitVal = parseInt(w.unit);
+                return !isNaN(unitVal) && unitVal >= start && unitVal <= end;
+            });
+        } else {
+            start = parseInt(startUnitSelect.value);
+            end = parseInt(endUnitSelect.value);
+
+            if (start > end) {
+                alert("開始番号は終了番号より前である必要があります。");
+                return;
+            }
+
+            sessionUnitRange = (start === end) ? `No. ${start}` : `No. ${start} - ${end}`;
+
+            currentSessionWords = allWords.filter(w => {
+                const id = parseInt(w.id);
+                return id >= start && id <= end;
+            });
         }
-
-        sessionUnitRange = (start === end) ? `No. ${start}` : `No. ${start} - ${end}`;
-
-        currentSessionWords = allWords.filter(w => {
-            const id = parseInt(w.id);
-            return id >= start && id <= end;
-        });
 
         if (currentSessionWords.length === 0) {
             const label = testMode === 'idiom' ? '熟語' : '単語';
@@ -155,10 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
         card.style.display = '';
 
         // Update Title
-        if (start === end) {
-            currentUnitDisplay.textContent = start;
+        if (testMode === 'vocabulary') {
+            currentUnitDisplay.textContent = sessionUnitRange;
         } else {
-            currentUnitDisplay.textContent = `${start} - ${end}`;
+            if (start === end) {
+                currentUnitDisplay.textContent = start;
+            } else {
+                currentUnitDisplay.textContent = `${start} - ${end}`;
+            }
         }
 
         // 選択された範囲全体から均等にランダム抽出するため、Fisher-Yatesシャッフルを使用する
