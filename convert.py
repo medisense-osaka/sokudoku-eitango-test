@@ -62,12 +62,15 @@ with open(idiom_csv_path, 'r', encoding='utf-8') as f:
         if i == 0:
             continue
             
-        # Check if line is valid (at least 2 columns)
-        if len(row) < 2:
+        # Check if line is valid (at least 3 columns)
+        if len(row) < 3:
             continue
             
-        word = row[0].strip()
-        meaning = row[1].strip()
+        q_num = row[0].strip()
+        word = row[1].strip()
+        meaning = row[2].strip()
+        example = row[3].strip() if len(row) > 3 else ""
+        example_translation = row[4].strip() if len(row) > 4 else ""
         
         # Skip if word or meaning is empty
         if not word or not meaning:
@@ -81,11 +84,12 @@ with open(idiom_csv_path, 'r', encoding='utf-8') as f:
             
         idiom_list.append({
             'id': len(idiom_list) + 1,
+            'q_num': q_num,
             'word': word,
             'meaning': meaning,
             'phonetic': '',
-            'example': '',
-            'example_translation': '',
+            'example': example,
+            'example_translation': example_translation,
             'unit': '1'
         })
 

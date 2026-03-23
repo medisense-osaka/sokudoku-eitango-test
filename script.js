@@ -102,13 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function populateUnitSelectors() {
-        // IDのリストを取得（1から始まる通し番号を想定）
-        const wordIds = allWords.map(w => parseInt(w.id)).sort((a, b) => a - b);
+        // 単語の場合は id、熟語の場合はリンゴマーク番号(q_num)を使用
+        const prop = testMode === 'idiom' ? 'q_num' : 'id';
+        const ids = [...new Set(allWords.map(w => parseInt(w[prop]) || 1))].sort((a, b) => a - b);
 
         startUnitSelect.innerHTML = '';
         endUnitSelect.innerHTML = '';
 
-        wordIds.forEach(idVal => {
+        ids.forEach(idVal => {
             const optionStart = document.createElement('option');
             optionStart.value = idVal;
             optionStart.textContent = `No. ${idVal}`;
@@ -121,9 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Set default values (Start: Min, End: Max)
-        if (wordIds.length > 0) {
-            startUnitSelect.value = wordIds[0];
-            endUnitSelect.value = wordIds[wordIds.length - 1];
+        if (ids.length > 0) {
+            startUnitSelect.value = ids[0];
+            endUnitSelect.value = ids[ids.length - 1];
         }
     }
 
@@ -162,8 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionUnitRange = (start === end) ? `No. ${start}` : `No. ${start} - ${end}`;
 
             currentSessionWords = allWords.filter(w => {
-                const id = parseInt(w.id);
-                return id >= start && id <= end;
+                const prop = testMode === 'idiom' ? 'q_num' : 'id';
+                const val = parseInt(w[prop]) || 1;
+                return val >= start && val <= end;
             });
         }
 
