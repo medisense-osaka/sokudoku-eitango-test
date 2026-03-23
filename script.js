@@ -12,8 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startScreen = document.getElementById('start-screen');
     const quizScreen = document.getElementById('quiz-screen');
 
-    const startUnitSelect = document.getElementById('start-unit');
-    const endUnitSelect = document.getElementById('end-unit');
+    const idiomUnitRangeSelect = document.getElementById('idiom-unit-range');
     const startBtn = document.getElementById('start-btn');
     const studentNameInput = document.getElementById('student-name');
     const currentUnitDisplay = document.getElementById('current-unit-display');
@@ -21,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // New selection elements
     const vocabRangeGroup = document.getElementById('vocab-range-group');
     const vocabUnitRangeSelect = document.getElementById('vocab-unit-range');
-    const startUnitGroup = document.getElementById('start-unit-group');
-    const endUnitGroup = document.getElementById('end-unit-group');    const optionsContainer = document.getElementById('options-container');
+    const idiomRangeGroup = document.getElementById('idiom-range-group');
+    const optionsContainer = document.getElementById('options-container');
     const nextBtn = document.getElementById('next-btn');
 
     const resetBtn = document.getElementById('reset-btn');
@@ -67,12 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Toggle Display
             if (testMode === 'vocabulary') {
                 vocabRangeGroup.style.display = '';
-                startUnitGroup.style.display = 'none';
-                endUnitGroup.style.display = 'none';
+                idiomRangeGroup.style.display = 'none';
             } else {
                 vocabRangeGroup.style.display = 'none';
-                startUnitGroup.style.display = '';
-                endUnitGroup.style.display = '';
+                idiomRangeGroup.style.display = '';
             }
             
             loadWords();
@@ -98,34 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
-        populateUnitSelectors();
-    }
-
-    function populateUnitSelectors() {
-        // 単語の場合は id、熟語の場合はリンゴマーク番号(q_num)を使用
-        const prop = testMode === 'idiom' ? 'q_num' : 'id';
-        const ids = [...new Set(allWords.map(w => parseInt(w[prop]) || 1))].sort((a, b) => a - b);
-
-        startUnitSelect.innerHTML = '';
-        endUnitSelect.innerHTML = '';
-
-        ids.forEach(idVal => {
-            const optionStart = document.createElement('option');
-            optionStart.value = idVal;
-            optionStart.textContent = `No. ${idVal}`;
-            startUnitSelect.appendChild(optionStart);
-
-            const optionEnd = document.createElement('option');
-            optionEnd.value = idVal;
-            optionEnd.textContent = `No. ${idVal}`;
-            endUnitSelect.appendChild(optionEnd);
-        });
-
-        // Set default values (Start: Min, End: Max)
-        if (ids.length > 0) {
-            startUnitSelect.value = ids[0];
-            endUnitSelect.value = ids[ids.length - 1];
-        }
+        // Idiom range UI updates itself, no need to populate
     }
 
     function startSession() {
@@ -152,20 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return !isNaN(unitVal) && unitVal >= start && unitVal <= end;
             });
         } else {
-            start = parseInt(startUnitSelect.value);
-            end = parseInt(endUnitSelect.value);
+            const rangeStr = idiomUnitRangeSelect.value;
+            const parts = rangeStr.split('-');
+            start = parseInt(parts[0]);
+            end = parseInt(parts[1]);
 
-            if (start > end) {
-                alert("開始番号は終了番号より前である必要があります。");
-                return;
-            }
-
-            sessionUnitRange = (start === end) ? `No. ${start}` : `No. ${start} - ${end}`;
+            sessionUnitRange = `No. ${start}-${end}`;
 
             currentSessionWords = allWords.filter(w => {
-                const prop = testMode === 'idiom' ? 'q_num' : 'id';
-                const val = parseInt(w[prop]) || 1;
-                return val >= start && val <= end;
+                const qNum = parseInt(w.q_num) || 1;
+                return qNum >= start && qNum <= end;
             });
         }
 
@@ -225,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         quizScreen.style.display = 'none';
         startScreen.style.display = 'flex';
         startScreen.classList.add('active');
-        populateUnitSelectors();
     }
 
     function abortSession() {
@@ -304,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
             quizScreen.style.display = 'none';
             startScreen.style.display = 'flex';
             startScreen.classList.add('active');
-            populateUnitSelectors();
         });
     }
 
