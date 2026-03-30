@@ -601,6 +601,19 @@ document.addEventListener('DOMContentLoaded', () => {
     startBtn.addEventListener('click', startSession);
     resetBtn.addEventListener('click', resetApp);
 
+    // URLパラメータから名前を自動セット（外部アプリ連携用）
+    const urlParams = new URLSearchParams(window.location.search);
+    const nameParam = urlParams.get('name');
+    if (nameParam) {
+        const options = studentNameInput.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === nameParam) {
+                studentNameInput.value = nameParam;
+                break;
+            }
+        }
+    }
+
     // Initialize
     loadWords();
 });
