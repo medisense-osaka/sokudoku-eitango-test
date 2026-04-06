@@ -606,11 +606,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameParam = urlParams.get('name');
     if (nameParam) {
         const options = studentNameInput.options;
+        let matched = false;
         for (let i = 0; i < options.length; i++) {
             if (options[i].value === nameParam) {
                 studentNameInput.value = nameParam;
+                matched = true;
                 break;
             }
+        }
+        if (matched) {
+            // selectを無効化し、テキスト表示に切り替え
+            studentNameInput.style.display = 'none';
+            const nameDisplay = document.createElement('div');
+            nameDisplay.textContent = nameParam;
+            nameDisplay.style.cssText = 'font-size:16px;font-weight:bold;padding:10px 12px;background:#f0f0f0;border-radius:8px;color:#333;';
+            studentNameInput.parentNode.insertBefore(nameDisplay, studentNameInput.nextSibling);
         }
     }
 
