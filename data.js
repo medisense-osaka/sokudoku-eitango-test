@@ -3332,7 +3332,7 @@ const vocabularyData = [
     {
         "id": 371,
         "word": "climate",
-        "meaning": "（年間を通じての）機構",
+        "meaning": "（年間を通じての）気候",
         "phonetic": "",
         "example": "",
         "example_translation": "",
